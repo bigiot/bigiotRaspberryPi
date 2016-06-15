@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 import socket
 import time
+import json
 from datetime import datetime
 #must be modified===
 DEVICEID='112'
@@ -29,6 +30,20 @@ def keepOnline(t):
 		return time.time()
 	else:
 		return t
+def say(s,id,content):
+	sayBytes=bytes('{\"M\":\"say\",\"ID\":\"'+id+'\",\"C\":\"'+content+'\"}\n',encoding='utf8')
+	s.sendall(sayBytes)
+def process(msg,s,checkinBytes):
+	msg=json.loads(msg)
+	if msg['M'] == 'connected':
+		s.sendall(checkinBytes)
+	if msg['M'] == 'login':
+		say(s,msg['ID'],'Welcome! Your public ID is '+msg['ID'])
+	if msg['M'] == 'say':
+		say(s,msg['ID'],'You have send to me:{'+msg['C']+'}')
+	#for key in msg:
+	#	print(key,msg[key])
+	#print('msg',type(msg))
 while True:
 	try:
 		d=s.recv(1)
@@ -40,6 +55,8 @@ while True:
 			data+=d
 		else:
 			#do something here...
-			print(str(data,encoding='utf-8'))
+			msg=str(data,encoding='utf-8')
+			process(msg,s,checkinBytes)
+			print(msg)
 			data=b''
 	t = keepOnline(t)
