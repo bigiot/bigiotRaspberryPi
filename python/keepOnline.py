@@ -4,6 +4,7 @@ import time
 from datetime import datetime
 #must be modified===
 DEVICEID='112'
+APIKEY='cxx036f9c'
 #modify end=========
 host="www.bigiot.net"
 port=8181
@@ -15,7 +16,7 @@ s.sendall(checkinBytes)
 data=b''
 flag=1
 t=time.time()
-def keeponline(t):
+def keepOnline(t):
 	if time.time()-t>30:
 		s.sendall(b'{\"M\":\"status\"}\n')
 		print('check status')
@@ -35,4 +36,4 @@ while True:
 			#do something here...
 			print(str(data,encoding='utf-8'))
 			data=b''
-	t = keeponline(t)
+	t = keepOnline(t)
