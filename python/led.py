@@ -1,11 +1,13 @@
 #!/usr/bin/python3
 import socket
 import time
-from datetime import datetime
+import json
+from gpiozero import LED
 #must be modified===
 DEVICEID='112'
 APIKEY='cxx036f9c'
 #modify end=========
+led = LED(17)
 host="www.bigiot.net"
 port=8181
 checkinBytes=bytes('{\"M\":\"checkin\",\"ID\":\"'+DEVICEID+'\",\"K\":\"'+APIKEY+'\"}\n',encoding='utf8')
@@ -29,18 +31,40 @@ def keepOnline(t):
 		return time.time()
 	else:
 		return t
+def say(s,id,content):
+	sayBytes=bytes('{\"M\":\"say\",\"ID\":\"'+id+'\",\"C\":\"'+content+'\"}\n',encoding='utf8')
+	s.sendall(sayBytes)
+def process(msg,s,checkinBytes):
+	msg=json.loads(msg)
+	if msg['M'] == 'connected':
+		s.sendall(checkinBytes)
+	if msg['M'] == 'login':
+		say(s,msg['ID'],'Welcome! Your public ID is '+msg['ID'])
+	if msg['M'] == 'say':
+		say(s,msg['ID'],'You have send to me:{'+msg['C']+'}')
+		if msg['C'] == "play":
+			led.on()
+			say(s,msg['ID'],'LED turns on!')
+		if msg['C'] == "stop":
+			led.off()
+			say(s,msg['ID'],'LED turns off!')
+	#for key in msg:
+	#	print(key,msg[key])
+	#print('msg',type(msg))
 while True:
 	try:
 		d=s.recv(1)
 		flag=True
 	except:
 		flag=False
-		time.sleep(2)
+		time.sleep(1)
 		t = keepOnline(t)
 	if flag:
 		if d!=b'\n':
 			data+=d
 		else:
 			#do something here...
-			print(str(data,encoding='utf-8'))
+			msg=str(data,encoding='utf-8')
+			process(msg,s,checkinBytes)
+			print(msg)
 			data=b''

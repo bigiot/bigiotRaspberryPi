@@ -24,7 +24,7 @@ data=b''
 flag=1
 t=time.time()
 def keepOnline(t):
-	if time.time()-t>30:
+	if time.time()-t>40:
 		s.sendall(b'{\"M\":\"status\"}\n')
 		print('check status')
 		return time.time()
@@ -50,6 +50,8 @@ while True:
 		flag=True
 	except:
 		flag=False
+		time.sleep(2)
+		t = keepOnline(t)
 	if flag:
 		if d!=b'\n':
 			data+=d
@@ -59,4 +61,3 @@ while True:
 			process(msg,s,checkinBytes)
 			print(msg)
 			data=b''
-	t = keepOnline(t)
