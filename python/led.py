@@ -3,6 +3,7 @@ import socket
 import time
 import json
 from gpiozero import LED
+
 #must be modified===
 DEVICEID='112'
 APIKEY='cxx036f9c'
@@ -10,8 +11,10 @@ APIKEY='cxx036f9c'
 led = LED(17)
 host="www.bigiot.net"
 port=8181
-checkinBytes=bytes('{\"M\":\"checkin\",\"ID\":\"'+DEVICEID+'\",\"K\":\"'+APIKEY+'\"}\n',encoding='utf8')
+
+#connect bigiot
 s=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+s.settimeout(0)
 while True:
 	try:
 		s.connect((host,port))
@@ -19,8 +22,12 @@ while True:
 	except:
 		print('waiting for connect bigiot.net...')
 		time.sleep(2)
-s.settimeout(0)
+
+#check in bigiot
+checkinBytes=bytes('{\"M\":\"checkin\",\"ID\":\"'+DEVICEID+'\",\"K\":\"'+APIKEY+'\"}\n',encoding='utf8')
 s.sendall(checkinBytes)
+
+#keep online with bigiot function
 data=b''
 flag=1
 t=time.time()
@@ -31,9 +38,13 @@ def keepOnline(t):
 		return time.time()
 	else:
 		return t
+
+#say something to other device function
 def say(s,id,content):
 	sayBytes=bytes('{\"M\":\"say\",\"ID\":\"'+id+'\",\"C\":\"'+content+'\"}\n',encoding='utf8')
 	s.sendall(sayBytes)
+
+#deal with message coming in
 def process(msg,s,checkinBytes):
 	msg=json.loads(msg)
 	if msg['M'] == 'connected':
@@ -51,6 +62,8 @@ def process(msg,s,checkinBytes):
 	#for key in msg:
 	#	print(key,msg[key])
 	#print('msg',type(msg))
+
+#main while
 while True:
 	try:
 		d=s.recv(1)
@@ -63,7 +76,6 @@ while True:
 		if d!=b'\n':
 			data+=d
 		else:
-			#do something here...
 			msg=str(data,encoding='utf-8')
 			process(msg,s,checkinBytes)
 			print(msg)
